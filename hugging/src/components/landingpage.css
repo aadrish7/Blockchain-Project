@@ -1,25 +1,67 @@
-/* style.css */
+/* landingpage.css */
 .LandingPageContainer {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-    background-color: #f8f9fa;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background-image: url('./LandingPage.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  overflow: hidden; 
+  text-align: center; 
+  color: #333; 
+}
+
+.AnimatedText {
+  animation: moveDown 2s ease-out forwards;
+  opacity: 0; 
+  font-size: 2.5em; 
+  margin-bottom: 20px;
+}
+
+@keyframes moveDown {
+  0% {
+      transform: translateY(-100%);
+      opacity: 0;
   }
-  
-  .Button {
-    padding: 10px 20px;
-    margin: 10px;
-    border: none;
-    border-radius: 5px;
-    background-color: #007bff;
-    color: white;
-    font-size: 16px;
-    cursor: pointer;
+  100% {
+      transform: translateY(0);
+      opacity: 1;
   }
-  
-  .Button:hover {
-    background-color: #0056b3;
+}
+
+.ButtonContainer {
+  display: flex;
+  gap: 10px; 
+}
+
+.Button {
+  padding: 10px 20px;
+  margin: 10px;
+  border: none;
+  border-radius: 5px;
+  background-color: #007bff;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.3s;
+  animation: fadeIn 2s ease-out 1s forwards; 
+  opacity: 0; 
+}
+
+.Button:hover {
+  background-color: #0056b3;
+  transform: scale(1.1); 
+}
+
+@keyframes fadeIn {
+  0% {
+      opacity: 0;
   }
-  
+  100% {
+      opacity: 1;
+  }
+}
