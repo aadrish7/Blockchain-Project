@@ -1,8 +1,9 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom'; 
 import './login.css';
 import { UsernameContext } from '../userdata/usernamecontext';
+
 const Login = () => {
     const { setUsername } = useContext(UsernameContext); 
     const [formData, setFormData] = useState({
@@ -10,6 +11,16 @@ const Login = () => {
         password: ''
     });
     const [error, setError] = useState('');
+
+    useEffect(() => {
+        // Add the class to the body when the component mounts
+        document.body.classList.add('login-page');
+        
+        // Clean up the class when the component unmounts
+        return () => {
+            document.body.classList.remove('login-page');
+        };
+    }, []);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });

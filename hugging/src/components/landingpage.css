@@ -1,18 +1,24 @@
 /* landingpage.css */
+body.landing-page {
+  background-image: url('blur.png'); /* Replace with the actual URL of the generated image */
+  background-size: cover;
+  background-position: center;
+  margin: 0;
+  font-family: Arial, sans-serif;
+  height: 100vh;
+  overflow: hidden;
+}
+
 .LandingPageContainer {
+  max-width: 600px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  height: 100vh;
-  background-image: url('./LandingPage.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-  overflow: hidden; 
-  text-align: center; 
-  color: #333; 
+  opacity: 0;
+  animation: fadeIn 1s forwards;
+  text-align: center;
+  color: #333;
 }
 
 .AnimatedText {
