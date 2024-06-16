@@ -7,6 +7,12 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 contract SC_20_21_13_28 {
     using Strings for uint256;
 
+    // Public Key of the 3rd Party to verify the Signature send over Smart Contract for the authorization for credentials :
+    address public constant publicKey =
+        0x7264d9Fd1a56D865D8B7D96E5251A6eFE820b483;
+
+    event SignUpResult(bool success);
+
     // Attribute Management
     mapping(string => mapping(string => uint)) doctorIsAuthorized;
     mapping(string => mapping(string => uint)) doctorSpecialization;
@@ -27,6 +33,83 @@ contract SC_20_21_13_28 {
 
     // Store dataset-specific access control policies
     mapping(string => mapping(string => mapping(string => uint))) datasetPolicies;
+
+    // ******** Signature Library ~ Starts here ********
+
+    // Signature Validation :
+    function getMessageHash(
+        string memory _message
+    ) public pure returns (bytes32) {
+        return keccak256(abi.encodePacked(_message));
+    }
+
+    function getSender() public view returns (address) {
+        return msg.sender;
+    }
+
+    function getEthSignedMessageHash(
+        bytes32 _messageHash
+    ) public pure returns (bytes32) {
+        /*
+        Signature is produced by signing a keccak256 hash with the following format:
+        "\x19Ethereum Signed Message\n" + len(msg) + msg
+        */
+        return
+            keccak256(
+                abi.encodePacked(
+                    "\x19Ethereum Signed Message:\n32",
+                    _messageHash
+                )
+            );
+    }
+
+    function verify(
+        address _signer,
+        string memory _message,
+        bytes memory signature
+    ) public pure returns (bool) {
+        bytes32 messageHash = getMessageHash(_message);
+        bytes32 ethSignedMessageHash = getEthSignedMessageHash(messageHash);
+
+        return recoverSigner(ethSignedMessageHash, signature) == _signer;
+    }
+
+    function recoverSigner(
+        bytes32 _ethSignedMessageHash,
+        bytes memory _signature
+    ) public pure returns (address) {
+        (bytes32 r, bytes32 s, uint8 v) = splitSignature(_signature);
+
+        return ecrecover(_ethSignedMessageHash, v, r, s);
+    }
+
+    function splitSignature(
+        bytes memory sig
+    ) public pure returns (bytes32 r, bytes32 s, uint8 v) {
+        require(sig.length == 65, "invalid signature length");
+
+        assembly {
+            /*
+            First 32 bytes stores the length of the signature
+
+            add(sig, 32) = pointer of sig + 32
+            effectively, skips first 32 bytes of signature
+
+            mload(p) loads next 32 bytes starting at the memory address p into memory
+            */
+
+            // first 32 bytes, after the length prefix
+            r := mload(add(sig, 32))
+            // second 32 bytes
+            s := mload(add(sig, 64))
+            // final byte (first byte of the next 32 bytes)
+            v := byte(0, mload(add(sig, 96)))
+        }
+
+        // implicitly return (r, s, v)
+    }
+
+    // ******** Signature Library ~ Ends here ********
 
     constructor() {
         // Attribute Management
@@ -143,6 +226,103 @@ contract SC_20_21_13_28 {
         }
 
         calls++;
+    }
+
+    function evaluate2(
+        string memory datasetID,
+        string memory doctorID,
+        string memory hospitalID,
+        string memory specialization,
+        string memory accessRights,
+        string memory location,
+        bytes memory signature
+    ) public {
+        // Attribute Management
+        string[12] memory request;
+        uint length = 0;
+
+        // Verifying the Signature first :
+        require(
+            verify(
+                publicKey,
+                string(
+                    abi.encodePacked(
+                        datasetID,
+                        ",",
+                        doctorID,
+                        ",",
+                        hospitalID,
+                        ",",
+                        specialization,
+                        ",",
+                        accessRights,
+                        ",",
+                        location
+                    )
+                ),
+                signature
+            ) == true,
+            "Invalid signature"
+        );
+
+        // Now Continuing with the authorization via access policy rules in Contract
+
+        if (doctorIsAuthorized[doctorID][hospitalID] == 1) {
+            request[length] = "access-subject";
+            request[length + 1] = "isAuthorized";
+            request[length + 2] = "true";
+            length += 3;
+        }
+
+        if (doctorSpecialization[doctorID][specialization] == 1) {
+            request[length] = "access-subject";
+            request[length + 1] = "specialization";
+            request[length + 2] = specialization;
+            length += 3;
+        }
+
+        if (doctorHasAccessRights[doctorID][accessRights] == 1) {
+            request[length] = "access-subject";
+            request[length + 1] = "hasAccessRights";
+            request[length + 2] = accessRights;
+            length += 3;
+        }
+
+        if (datasetLocation[hospitalID][location] == 1) {
+            request[length] = "dataset";
+            request[length + 1] = "location";
+            request[length + 2] = location;
+            length += 3;
+        }
+
+        // Check against dataset-specific policy
+        for (uint i = 0; i < length; i += 3) {
+            string memory category = request[i];
+            string memory attrID = request[i + 1];
+            string memory value = request[i + 2];
+
+            if (datasetPolicies[datasetID][category][attrID] == 1) {
+                clauseResults[indexResolver[category]][
+                    indexResolver[append(category, attrID, "")]
+                ][indexResolver[append(category, attrID, value)]] = true;
+            }
+        }
+
+        bool permit = true;
+
+        for (uint i = 1; i <= categoryCount; i++) {
+            for (uint j = 1; j <= attributeCounts[i]; j++) {
+                for (uint k = 1; k <= valueCounts[i][j]; k++) {
+                    if (clauseResults[i][j][k]) {
+                        clauseResults[i][j][k] = false;
+                    } else {
+                        permit = false;
+                    }
+                }
+            }
+        }
+
+        emit SignUpResult(permit);
     }
 
     function getEvaluationResult(
