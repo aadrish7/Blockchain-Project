@@ -7,6 +7,7 @@ function FileList() {
   const [inputValue, setInputValue] = useState("");
   const [files, setFiles] = useState([]);
   const [error, setError] = useState(null);
+  const [myCreds,setmyCreds] = useState(null);
   const [contract, setContract] = useState(null);
   const [account, setAccount] = useState('');
   const [result, setResult] = useState("");
@@ -133,6 +134,8 @@ function FileList() {
       const credentials = await axios.get(`http://localhost:3001/api/individuals/${inputValue}`);
       setNotification("Credentials retrieved successfully.");
       console.log("credentials", credentials);
+      setmyCreds(credentials);
+      console.log("My creds are : ", myCreds);
       const { doctorId, hospitalId, specialization, accessRights, location } = credentials.data;
       const temp = await contract.methods.evaluate(doctorId, doctorId, hospitalId, specialization, accessRights, location).call({ from: account });
       setTimeout(async () => {
