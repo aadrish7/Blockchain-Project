@@ -6,6 +6,8 @@ import { UsernameContext } from '../userdata/usernamecontext';
 
 
 
+
+
 const Login = () => {
     const { setUsername } = useContext(UsernameContext); 
     const [formData, setFormData] = useState({
@@ -28,12 +30,11 @@ const Login = () => {
                 // Redirect to another route upon successful login
                 setUsername(formData.username); 
                 window.location.href = '/userpage'; // Use window.location.href to navigate
+                const token = response.data.token;
+                console.log("the token is : ", token)
+                localStorage.setItem('authToken', token);
+                // alert('Login successful!');
             }
-            // Store token in local storage or session storage
-            /*
-                TASK TO COMPLETE
-            */
-            // Redirect to dashboard or protected route
         } catch (error) {
             console.error(error.response.data);
             setError('Invalid username or password'); // Set error message
