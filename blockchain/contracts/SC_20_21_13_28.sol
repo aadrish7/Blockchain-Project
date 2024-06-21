@@ -11,7 +11,8 @@ contract SC_20_21_13_28 {
     address public constant publicKey =
         0x7264d9Fd1a56D865D8B7D96E5251A6eFE820b483;
 
-    event SignUpResult(bool success);
+    // event SignUpResult(bool success);
+    event SignUpResult(string success);
 
     // Attribute Management
     mapping(string => mapping(string => uint)) doctorIsAuthorized;
@@ -247,15 +248,11 @@ contract SC_20_21_13_28 {
                 publicKey,
                 string(
                     abi.encodePacked(
-                        datasetID,
-                        ",",
                         doctorID,
                         ",",
                         hospitalID,
                         ",",
                         specialization,
-                        ",",
-                        accessRights,
                         ",",
                         location
                     )
@@ -309,6 +306,10 @@ contract SC_20_21_13_28 {
         }
 
         bool permit = true;
+        string memory myAddress = convert();
+        string memory decision = string(
+            abi.encodePacked("false", ":", myAddress)
+        );
 
         for (uint i = 1; i <= categoryCount; i++) {
             for (uint j = 1; j <= attributeCounts[i]; j++) {
@@ -322,7 +323,11 @@ contract SC_20_21_13_28 {
             }
         }
 
-        emit SignUpResult(permit);
+        if (permit == true) {
+            decision = string(abi.encodePacked("true", ":", myAddress));
+        }
+
+        emit SignUpResult(decision);
     }
 
     function getEvaluationResult(
@@ -387,5 +392,27 @@ contract SC_20_21_13_28 {
             _i /= 10;
         }
         return string(bstr);
+    }
+
+    function convert() public view returns (string memory) {
+        address addr = msg.sender;
+        string memory addrStr = toString(addr);
+        return addrStr;
+    }
+
+    function toString(address _addr) internal pure returns (string memory) {
+        bytes32 value = bytes32(uint256(uint160(_addr)));
+        bytes memory alphabet = "0123456789abcdef";
+
+        bytes memory str = new bytes(42);
+        str[0] = "0";
+        str[1] = "x";
+
+        for (uint256 i = 0; i < 20; i++) {
+            str[2 + i * 2] = alphabet[uint8(value[i + 12] >> 4)];
+            str[3 + i * 2] = alphabet[uint8(value[i + 12] & 0x0f)];
+        }
+
+        return string(str);
     }
 }

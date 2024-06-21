@@ -35,11 +35,6 @@ const Login = () => {
                 localStorage.setItem('authToken', token);
                 // alert('Login successful!');
             }
-            // Store token in local storage or session storage
-            /*
-                TASK TO COMPLETE
-            */
-            // Redirect to dashboard or protected route
         } catch (error) {
             console.error(error.response.data);
             setError('Invalid username or password'); // Set error message

@@ -3,11 +3,30 @@ import axios from 'axios';
 import Web3 from 'web3';
 import './filelist.css';
 
+// ****** New Imports for the Smart Contract Interaction ******
+import myContract from '../artifacts/contracts/SC_20_21_13_28.sol/SC_20_21_13_28.json';
+const ethers = require("ethers");
+
+// Web 3 WSS end-point :
+const NODE_URL =
+  "wss://sepolia.infura.io/ws/v3/f95f2b17b00a4d24b20398a713322329";
+const web3 = new Web3(NODE_URL);
+
+function encodeEvent(event) {
+  const keccakHash = web3.utils.keccak256(event);
+  console.log("your event hash is : ", keccakHash)
+  return keccakHash;
+}
+
+const myContractAddress = '0xAc966Fa4FB2B6d756FCF32667218F0CB0F0A5711';
+
+
+
 function FileList() {
   const [inputValue, setInputValue] = useState("");
   const [files, setFiles] = useState([]);
   const [error, setError] = useState(null);
-  const [myCreds,setmyCreds] = useState(null);
+  const [myCreds,setmyCreds] = useState('');
   const [contract, setContract] = useState(null);
   const [account, setAccount] = useState('');
   const [result, setResult] = useState("");
@@ -91,7 +110,7 @@ function FileList() {
     "stateMutability": "view",
     "type": "function"
 }]; // Your contract's ABI
-  const address = "0x8b18DeBe665AA7aCB94e32977a432C598B5E7271"; // Your contract's address
+  const address = "0xdbAbcc32657D3BDeb8464FdF74033500BA80fA18"; // Your contract's address
 
   useEffect(() => {
     async function fetchFiles() {
@@ -131,21 +150,60 @@ function FileList() {
 
   const checkPermissions = async (fileName) => {
     try {
-      const credentials = await axios.get(`http://localhost:3001/api/individuals/${inputValue}`);
+      // passin the signature token to the server for the details :
+      const authToken = localStorage.getItem('authToken');
+      if (!authToken) {
+          throw new Error('Authentication token not found. Please log in.');
+      }
+      const credentials = await axios.get(`http://localhost:3001/api/individuals/${inputValue}`, {
+          headers: {
+              'Authorization': `Bearer ${authToken}`
+          }
+      });
+
+      // const credentials = await axios.get(`http://localhost:3001/api/individuals/${inputValue}`);
       setNotification("Credentials retrieved successfully.");
       console.log("credentials", credentials);
       setmyCreds(credentials);
       console.log("My creds are : ", myCreds);
       const { doctorId, hospitalId, specialization, accessRights, location } = credentials.data;
-      const temp = await contract.methods.evaluate(doctorId, doctorId, hospitalId, specialization, accessRights, location).call({ from: account });
-      setTimeout(async () => {
-        const evaluationResult = await contract.methods.getEvaluationResult(doctorId).call();
-        console.log('Evaluation result:', evaluationResult);
-        setResult(evaluationResult);
-        setNotification("Smart contract invoked successfully. Result: " + evaluationResult);
-      }, 10000);
-      console.log("Result", result);
-      return result === "Permit";
+
+      // Interaction with the Smart Contract :
+      if (typeof myContract === 'undefined' || !myContract.abi) {
+        throw new Error('VerifySignature contract ABI is not defined');
+      }
+      const contractABI = myContract.abi;
+      await window.ethereum.request({ method: 'eth_requestAccounts' });
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const contract = new ethers.Contract(myContractAddress, contractABI, signer);
+
+      // Parsing && converting the token to 32 bytes:
+      console.log("Our token is : ", authToken)
+      let mySignature = authToken;
+      console.log(mySignature.length)
+      // if (mySignature && mySignature.startsWith('0x')) {
+      //   mySignature = mySignature.slice(2);
+      // }
+      // let mySignatureBytes = ethers.hexlify(mySignature);
+      
+
+      const tx = await contract.evaluate2(doctorId, doctorId, hospitalId, specialization, accessRights, location, mySignature);
+      const receipt = await tx.wait();
+      console.log("your transaction reciept is : ",receipt)
+      console.log("Decoding the data : ", receipt.logs);
+      console.log(web3.eth.abi.decodeParameter('string', receipt.logs[0].data));
+
+
+      // const temp = await contract.methods.evaluate(doctorId, doctorId, hospitalId, specialization, accessRights, location).call({ from: account });
+      // setTimeout(async () => {
+      //   const evaluationResult = await contract.methods.getEvaluationResult(doctorId).call();
+      //   console.log('Evaluation result:', evaluationResult);
+      //   setResult(evaluationResult);
+      //   setNotification("Smart contract invoked successfully. Result: " + evaluationResult);
+      // }, 10000);
+      // console.log("Result", result);
+      // return result === "Permit";
     } catch (error) {
       console.error('Error checking permissions:', error);
       return false;
@@ -159,6 +217,13 @@ function FileList() {
     }
     console.log("smart contract invoked successfully");
     const isAllowed = await checkPermissions(fileName);
+
+    // Need Modifications here : to get access from the Server to get the file 
+    
+
+
+
+
     if (isAllowed) {
       try {
         const response = await axios.get(`http://localhost:3001/files/${fileName}`, { responseType: 'blob' });
@@ -187,22 +252,22 @@ function FileList() {
     console.log("Submitting for: ", inputValue);
     // You can call checkPermissions or any other function here
     setNotification("Checking permissions for " + inputValue);
+    console.log("SUCCESSS IN TOKEN!")
+    console.log(myCreds)
     handleDownload(inputValue);
   };
 
   return (
     <> 
-        
-    
       <div>
         <h2 id="headerTitle" class="header-title">Uploaded Files</h2>
         <button onClick={connectMetamask}>Connect MetaMask</button>
       </div>
       <div class="file-list-container" id="fileListContainer">
       <form onSubmit={handleSubmit}>
-    <input type="text" value={inputValue} onChange={handleInputChange} placeholder="Enter doc ID" />
-    <button type="submit">Check Permissions</button>
-  </form>
+        <input type="text" value={inputValue} onChange={handleInputChange} placeholder="Enter doc ID" />
+        <button type="submit">Check Permissions</button>
+      </form>
         {/* {error && <p class="error-message" id="errorMessage">{error}</p>} */}
         {notification && <p class="notification-message" id="notificationMessage">{notification}</p>}
         <ul class="file-list" id="fileList">

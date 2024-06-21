@@ -8,8 +8,14 @@ const fs = require('fs');
 const path = require("path");
 const jwt = require('jsonwebtoken');
 const bodyParser = require('body-parser');
-const Web3 = require('web3');
+const {Web3} = require('web3');
 const Individual = require("./models/individual");
+
+// Imports for the signature creation :
+const ethUtil = require('ethereumjs-util');
+const secp256k1 = require('secp256k1');
+const ethers  = require('ethers');
+
 
 const app = express();
 app.use(express.json());
@@ -17,8 +23,20 @@ app.use(cors());
 app.use(bodyParser.json()); // Add body-parser middleware
 
 // JWT secret key
-const jwtSecretKey = 'secret_key'; // Use a secure key and keep it safe
 
+
+const jwtSecretKey = 'secret_key'; // Use a secure key and keep it safe
+const PRIVATEKEY = '29a51884dea81b2eb575cd46bd51bd703cfb4c45e44ff0ee00f113b7b4339088';
+const CONTRACTADDRESS = '0xAc966Fa4FB2B6d756FCF32667218F0CB0F0A5711';
+const NODE_URL =
+  "wss://sepolia.infura.io/ws/v3/f95f2b17b00a4d24b20398a713322329";
+const myWeb3 = new Web3(new Web3.providers.WebsocketProvider(NODE_URL));
+const logsFilter = {
+  address: "0xAc966Fa4FB2B6d756FCF32667218F0CB0F0A5711", // Contract address
+  topics: [
+    encodeEvent("SignUpResult(string)"),
+  ],
+};
 // Web3 setup - Update these values with your Ethereum node URL, contract address, and ABI and then uncomment the code below
 
 // const web3 = new Web3('http://localhost:8545'); // Change to your Ethereum node URL
@@ -41,6 +59,75 @@ function authenticateJWT(req, res, next) {
         res.status(400).send('Invalid token.');
     }
 }
+
+
+// Function to verify the signatures passed by the users => will return true/false
+async function verifySignature (message , givenSignature) {
+
+  const originalMessageHash = ethUtil.keccak256(Buffer.from(message));
+  const wallet = new ethers.Wallet(PRIVATEKEY);
+  const signature = await wallet.signMessage(originalMessageHash);  
+  // Comparin the Signatures here :
+  if(givenSignature === signature)
+  {
+    console.log("Signature verified correctly !")
+    return true 
+  }
+  else 
+  {
+    console.log("Signature verified incorrectly !")
+    return false
+  }
+}
+
+
+// ******   Functions to listen to the target smart contract for the access rights & accordinly provide access/deny
+
+
+// Function to encode the event topic
+function encodeEvent(event) {
+  return Web3.utils.sha3(event);
+}
+const subscribeToLogs = async () => {
+  try {
+    const subscription = await myWeb3.eth.subscribe('logs', logsFilter);
+
+    subscription.on('data', handleLogs);
+    subscription.on('error', handleError);
+
+    // Clean up subscription on component unmount
+    return () => {
+      subscription.unsubscribe((error, success) => {
+        if (success) console.log('Successfully unsubscribed!');
+        else console.error('Error unsubscribing:', error);
+      });
+    };
+  } catch (error) {
+    console.error(`Error subscribing to new logs: ${error}`);
+  }
+};
+
+// Fallback functions to react to the different events
+const handleLogs = (log) => {
+  
+  console.log('Received log:', log);
+  console.log(myWeb3.eth.abi.decodeParameter('string', log.data));
+
+
+  // handling the access accordinly in Memory(RAM for now) : 
+
+};
+
+const handleError = (error) => {
+  console.error(`Error with log subscription: ${error}`);
+};
+
+// Call the subscription function
+subscribeToLogs();
+
+
+
+
 
 mongoose
   .connect(
@@ -83,6 +170,21 @@ app.get("/files", (req, res) => {
 });
 
 app.get("/files/:fileName", (req, res) => {
+
+  // Verify the Signature to ensure that it's the exactly the same person who wants the access
+
+  // After verifying, check if any relevant event for that block has been emmitted or not ?
+
+  // If event released, then grant the access for download 
+
+
+
+
+
+
+
+
+
   const fileName = req.params.fileName;
   const filePath = path.join(__dirname, 'uploads', fileName);
   console.log("filePath", filePath);
@@ -96,6 +198,15 @@ app.get("/files/:fileName", (req, res) => {
 
 app.get('/api/individuals/:username', async (req, res) => {
   try {
+    
+    // Extracting the Token :
+    const authHeader = req.headers['authorization'];
+    let token = authHeader && authHeader.split(' ')[1];
+    console.log("the token value is : ", token);
+
+    if (!token) return res.status(401).json({ message: 'Token not found' });
+    console.log("the token value is : ", token);
+    
     const username = req.params.username;
     console.log("username", username);
     const individual = await Individual.findOne({ username: username });
@@ -103,7 +214,22 @@ app.get('/api/individuals/:username', async (req, res) => {
     if (!individual) {
       return res.status(404).send({ message: 'Individual not found' });
     }
-    res.json(individual);
+
+    // Verifying the Token :
+    let stringifiedMsg = individual.doctorId + "," + individual.hospitalId + "," + individual.specialization + "," + individual.location; 
+    console.log("String message is : ", stringifiedMsg)
+    let boolVerifySignature = await verifySignature(stringifiedMsg , token) 
+    if ( boolVerifySignature ===  true )
+    {
+      console.log("Token verification : Sucess!!")
+      res.json(individual);
+    }
+    else 
+    {
+      console.log("Token verification : Failed!!")
+      return res.status(404).send({ message: 'Token verification failed !' });
+    }
+    // res.json(individual);
   } catch (error) {
     res.status(500).send({ message: 'Server error', error: error.message });
   }
