@@ -24,6 +24,7 @@ const myContractAddress = '0xAc966Fa4FB2B6d756FCF32667218F0CB0F0A5711';
 
 function FileList() {
   const [inputValue, setInputValue] = useState("");
+  const [inputValue1, setInputValue1] = useState("");
   const [files, setFiles] = useState([]);
   const [error, setError] = useState(null);
   const [myCreds,setmyCreds] = useState('');
@@ -33,6 +34,10 @@ function FileList() {
   const [notification, setNotification] = useState("");  // State to hold notifications
   const handleInputChange = (event) => {
     setInputValue(event.target.value);
+  };
+
+  const handleInputChange1 = (event) => {
+    setInputValue1(event.target.value);
   };
   // ABI and Address of your Smart Contract
   const ABI = [{
@@ -188,7 +193,7 @@ function FileList() {
       // let mySignatureBytes = ethers.hexlify(mySignature);
       
 
-      const tx = await contract.evaluate2(doctorId, doctorId, hospitalId, specialization, accessRights, location, mySignature);
+      const tx = await contract.evaluate2(fileName, doctorId, hospitalId, specialization, accessRights, location, mySignature);
       const receipt = await tx.wait();
       console.log("your transaction reciept is : ",receipt)
       console.log("Decoding the data : ", receipt.logs);
@@ -216,14 +221,11 @@ function FileList() {
       return;
     }
     console.log("smart contract invoked successfully");
+    setInputValue1(fileName)
     const isAllowed = await checkPermissions(fileName);
 
     // Need Modifications here : to get access from the Server to get the file 
     
-
-
-
-
     if (isAllowed) {
       try {
         const response = await axios.get(`http://localhost:3001/files/${fileName}`, { responseType: 'blob' });
@@ -245,16 +247,20 @@ function FileList() {
   };
   const handleSubmit = async (event) => {
     event.preventDefault(); // Prevent default form submission behavior
-    if (!inputValue) {
+    if (!inputValue1) {
       setNotification("Please enter a file name.");
       return;
+    }
+    if (!inputValue)
+    {
+      setNotification("Please enter your doctor ID.");
     }
     console.log("Submitting for: ", inputValue);
     // You can call checkPermissions or any other function here
     setNotification("Checking permissions for " + inputValue);
     console.log("SUCCESSS IN TOKEN!")
     console.log(myCreds)
-    handleDownload(inputValue);
+    handleDownload(inputValue1);
   };
 
   return (
@@ -266,6 +272,8 @@ function FileList() {
       <div class="file-list-container" id="fileListContainer">
       <form onSubmit={handleSubmit}>
         <input type="text" value={inputValue} onChange={handleInputChange} placeholder="Enter doc ID" />
+        {/* <button type="submit">Check Permissions</button> */}
+        <input type="text" value={inputValue1} onChange={handleInputChange1} placeholder="Enter dataset ID" />
         <button type="submit">Check Permissions</button>
       </form>
         {/* {error && <p class="error-message" id="errorMessage">{error}</p>} */}

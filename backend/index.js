@@ -169,6 +169,11 @@ app.get("/files", (req, res) => {
   });
 });
 
+
+
+
+
+
 app.get("/files/:fileName", (req, res) => {
 
   // Verify the Signature to ensure that it's the exactly the same person who wants the access
