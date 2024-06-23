@@ -22,6 +22,10 @@ app.use(express.json());
 app.use(cors());
 app.use(bodyParser.json()); // Add body-parser middleware
 
+// Need to later remove it to persistent datastorage format. 
+const accessMap = new Map();
+
+
 // JWT secret key
 
 
@@ -115,6 +119,16 @@ const handleLogs = (log) => {
 
 
   // handling the access accordinly in Memory(RAM for now) : 
+  const [decision, publicKey, datasetID] = decodedData.split(':');
+  
+  // Only add to the map if the decision is true
+  if (decision === 'true') {
+    const key = `${publicKey}:${datasetID}`;
+    const blockNumber = log.blockNumber;
+    
+    // Store the block number in the map
+    accessMap.set(key, blockNumber);
+  }
 
 };
 
@@ -124,9 +138,6 @@ const handleError = (error) => {
 
 // Call the subscription function
 subscribeToLogs();
-
-
-
 
 
 mongoose
@@ -174,21 +185,57 @@ app.get("/files", (req, res) => {
 
 
 
-app.get("/files/:fileName", (req, res) => {
+app.get("/files/:fileName", async (req, res) => {
 
   // Verify the Signature to ensure that it's the exactly the same person who wants the access
+
+  // Extract headers
+  const authToken = req.headers['authorization'];
+  const publicKey = req.headers['publickey'];
+  const docId = req.headers['docID'];
+
+  // find the doc from the database :
+  const individual = await Individual.findOne({ username: username });
+  console.log(individual);
+  if (!individual) {
+    return res.status(404).send({ message: 'Individual not found' });
+  }
+
+  // verify token:
+  let stringifiedMsg = individual.doctorId + "," + individual.hospitalId + "," + individual.specialization + "," + individual.location; 
+  console.log("String message is : ", stringifiedMsg)
+  let boolVerifySignature = await verifySignature(stringifiedMsg , token) 
+  if ( boolVerifySignature ===  true )
+  {
+    console.log("Token verification : Sucess!!")
+    res.json(individual);
+  }
+  else 
+  {
+    console.log("Token verification : Failed!!")
+    return res.status(404).send({ message: 'Token verification failed !' });
+  }
+
+  // check if there is mapping available if yes then persue and delete it else throw errror :
+  let myKey = publicKey+":"+fileName;
+  
+  if (accessMap.has(key)) {
+    const value = accessMap.get(key);
+    console.log(`Found key: ${key}, value: ${value}`);
+    
+    // Delete the entry
+    accessMap.delete(key);
+    console.log(`Deleted key: ${key}`);
+  } else {
+    console.log(`Key not found: ${key}`);
+    return res.status(404).send({ message: 'Permisssion not given !' });
+  }
+
+
 
   // After verifying, check if any relevant event for that block has been emmitted or not ?
 
   // If event released, then grant the access for download 
-
-
-
-
-
-
-
-
 
   const fileName = req.params.fileName;
   const filePath = path.join(__dirname, 'uploads', fileName);

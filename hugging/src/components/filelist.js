@@ -220,15 +220,46 @@ function FileList() {
       setError('Smart contract not connected. Please check MetaMask.');
       return;
     }
+
+    // Demanding the doc ID :
+    if (!inputValue)
+    {
+      setNotification("Please enter your doctor ID.");
+    }    
+    
     console.log("smart contract invoked successfully");
     setInputValue1(fileName)
-    const isAllowed = await checkPermissions(fileName);
+    let isAllowed = await checkPermissions(fileName);
 
+    isAllowed = true;
     // Need Modifications here : to get access from the Server to get the file 
     
     if (isAllowed) {
       try {
-        const response = await axios.get(`http://localhost:3001/files/${fileName}`, { responseType: 'blob' });
+        // const response = await axios.get(`http://localhost:3001/files/${fileName}`, { responseType: 'blob' });
+        
+
+        //**** Details need to be checked ! */
+
+        const authToken = localStorage.getItem('authToken');
+        if (!authToken) {
+            throw new Error('Authentication token not found. Please log in.');
+        }
+
+        // Getting public key address :
+        await window.ethereum.request({ method: 'eth_requestAccounts' });
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await provider.getSigner();
+        const publicKeyAddress = await signer.getAddress();
+        const response = await axios.get(`http://localhost:3001/files/${fileName}`, {
+          headers: {
+            'Authorization': `Bearer ${authToken}`,
+            'PublicKey': publicKeyAddress,
+            'docID': inputValue
+          },
+          responseType: 'blob'
+        });
+
         const url = window.URL.createObjectURL(new Blob([response.data]));
         const link = document.createElement('a');
         link.href = url;
@@ -245,6 +276,7 @@ function FileList() {
       setError('You do not have permission to download this file.');
     }
   };
+
   const handleSubmit = async (event) => {
     event.preventDefault(); // Prevent default form submission behavior
     if (!inputValue1) {
