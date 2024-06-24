@@ -1,40 +1,116 @@
-.file-upload-container {
-    margin-top:20px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-  
-  .file-input {
-    border: 2px solid #007BFF;
-    border-radius: 5px;
-    padding: 10px;
-    margin-right: 10px;
-    cursor: pointer;
-  }
-  
-  .upload-button {
-    background-color: #007BFF;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    padding: 10px 20px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-  }
-  
-  .upload-button:hover {
-    background-color: #0056b3;
-  }
-  
-  .file-upload-title {
-    font-size: 1.5rem;
-    margin-top: 200px;
-    text-align: center;
-  }
-  .form{
-    margin : 20px;
-  }
-  .button{
-    margin: 200px
-  }
+body.fileupload-page {
+  background-image: url('blur.png'); /* Replace with the actual URL of the background image */
+  background-size: cover;
+  background-position: center;
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+/* Container styles */
+.fileupload-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: rgba(167, 230, 255, 0.9); /* Lightest blue with some transparency */
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  opacity: 0;
+  animation: fadeIn 1s forwards;
+}
+
+/* Title styles */
+.fileupload-title {
+  text-align: center;
+  color: #050C9C; /* Dark blue for the title */
+  margin-bottom: 30px;
+  transform: translateY(-20px);
+  animation: slideIn 1s forwards;
+}
+
+/* Form styles */
+.fileupload-form {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  align-items: center;
+}
+
+/* Input field styles */
+.file-input {
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #3572EF; /* Medium blue for input borders */
+  border-radius: 4px;
+  width: 100%;
+  box-sizing: border-box;
+  background-color: #A7E6FF; /* Lightest blue for the input background */
+  color: #050C9C; /* Dark blue for the input text */
+  opacity: 0;
+  animation: fadeIn 1s forwards;
+  animation-delay: 0.5s;
+}
+
+/* Button styles */
+.upload-button {
+  padding: 10px;
+  background-color: #3572EF; /* Medium blue for the button background */
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 15px;
+  width: 100%;
+  box-sizing: border-box;
+  opacity: 0;
+  animation: fadeIn 1s forwards;
+  animation-delay: 1s;
+}
+
+.upload-button:hover {
+  background-color: #3ABEF9; /* Lighter blue for the button hover state */
+}
+
+.navigation-button-container {
+  margin-top: 20px;
+}
+
+.Button {
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  background-color: #3572EF; /* Medium blue for the button background */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.Button:hover {
+  background-color: #3ABEF9; /* Lighter blue for the button hover state */
+}
+
+/* Status message styles */
+.upload-status-message {
+  margin-top: 10px;
+  font-size: 16px;
+  color: green; /* For success message */
+}
+
+.upload-status-message.error {
+  color: red; /* For error message */
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { transform: translateY(-20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}

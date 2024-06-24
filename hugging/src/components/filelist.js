@@ -125,6 +125,13 @@ function FileList() {
 
     fetchFiles();
     initializeWeb3();
+     // Add the class to the body when the component mounts
+     document.body.classList.add('file-list-page');
+
+     // Clean up the class when the component unmounts
+     return () => {
+       document.body.classList.remove('file-list-page');
+     };
   }, []);
 
   const initializeWeb3 = () => {
@@ -261,12 +268,12 @@ function FileList() {
     <> 
       <div>
         <h2 id="headerTitle" class="header-title">Uploaded Files</h2>
-        <button onClick={connectMetamask}>Connect MetaMask</button>
+        <button class="ConnectMetamask" onClick={connectMetamask}>Connect MetaMask</button>
       </div>
       <div class="file-list-container" id="fileListContainer">
       <form onSubmit={handleSubmit}>
         <input type="text" value={inputValue} onChange={handleInputChange} placeholder="Enter doc ID" />
-        <button type="submit">Check Permissions</button>
+        <button class="checkPermission" type="submit">Check Permissions</button>
       </form>
         {/* {error && <p class="error-message" id="errorMessage">{error}</p>} */}
         {notification && <p class="notification-message" id="notificationMessage">{notification}</p>}

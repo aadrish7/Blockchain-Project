@@ -1,12 +1,8 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom'; 
 import './login.css';
 import { UsernameContext } from '../userdata/usernamecontext';
-
-
-
-
 
 const Login = () => {
     const { setUsername } = useContext(UsernameContext); 
@@ -15,6 +11,16 @@ const Login = () => {
         password: ''
     });
     const [error, setError] = useState('');
+
+    useEffect(() => {
+        // Add the class to the body when the component mounts
+        document.body.classList.add('login-page');
+        
+        // Clean up the class when the component unmounts
+        return () => {
+            document.body.classList.remove('login-page');
+        };
+    }, []);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -30,11 +36,9 @@ const Login = () => {
                 // Redirect to another route upon successful login
                 setUsername(formData.username); 
                 window.location.href = '/userpage'; // Use window.location.href to navigate
-                const token = response.data.token;
-                console.log("the token is : ", token)
-                localStorage.setItem('authToken', token);
-                // alert('Login successful!');
             }
+            // Store token in local storage or session storage
+            // Redirect to dashboard or protected route
         } catch (error) {
             console.error(error.response.data);
             setError('Invalid username or password'); // Set error message
