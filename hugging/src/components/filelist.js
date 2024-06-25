@@ -18,12 +18,13 @@ function encodeEvent(event) {
   return keccakHash;
 }
 
-const myContractAddress = '0xAc966Fa4FB2B6d756FCF32667218F0CB0F0A5711';
+// const myContractAddress = '0xAc966Fa4FB2B6d756FCF32667218F0CB0F0A5711';
 
-
+const myContractAddress = '0x0c00558dd823b1b093DD48D092C618319087D243';
 
 function FileList() {
   const [inputValue, setInputValue] = useState("");
+  const [inputValue1, setInputValue1] = useState("");
   const [files, setFiles] = useState([]);
   const [error, setError] = useState(null);
   const [myCreds,setmyCreds] = useState('');
@@ -33,6 +34,10 @@ function FileList() {
   const [notification, setNotification] = useState("");  // State to hold notifications
   const handleInputChange = (event) => {
     setInputValue(event.target.value);
+  };
+
+  const handleInputChange1 = (event) => {
+    setInputValue1(event.target.value);
   };
   // ABI and Address of your Smart Contract
   const ABI = [{
@@ -188,11 +193,12 @@ function FileList() {
       // let mySignatureBytes = ethers.hexlify(mySignature);
       
 
-      const tx = await contract.evaluate2(doctorId, doctorId, hospitalId, specialization, accessRights, location, mySignature);
+      const tx = await contract.evaluate(fileName, doctorId, hospitalId, specialization, accessRights, location, mySignature);
       const receipt = await tx.wait();
       console.log("your transaction reciept is : ",receipt)
       console.log("Decoding the data : ", receipt.logs);
       console.log(web3.eth.abi.decodeParameter('string', receipt.logs[0].data));
+      return true;
 
 
       // const temp = await contract.methods.evaluate(doctorId, doctorId, hospitalId, specialization, accessRights, location).call({ from: account });
@@ -210,23 +216,57 @@ function FileList() {
     }
   };
 
-  const handleDownload = async (fileName) => {
+  const handleDownload = async (docID , fileName) => {
     if (!contract) {
       setError('Smart contract not connected. Please check MetaMask.');
       return;
     }
-    console.log("smart contract invoked successfully");
-    const isAllowed = await checkPermissions(fileName);
 
+    // Demanding the doc ID :
+    if (!inputValue)
+    {
+      setNotification("Please enter your doctor ID.");
+    }    
+    // Demanding the doc ID :
+    if (!docID) {
+      setNotification("Please enter your doctor ID.");
+      return; // Add return here to prevent further execution
+    } 
+    
+    console.log("smart contract invoked successfully");
+    setInputValue1(fileName)
+    let isAllowed = await checkPermissions(fileName);
+
+    // isAllowed = true;
     // Need Modifications here : to get access from the Server to get the file 
     
-
-
-
-
     if (isAllowed) {
       try {
-        const response = await axios.get(`http://localhost:3001/files/${fileName}`, { responseType: 'blob' });
+        // const response = await axios.get(`http://localhost:3001/files/${fileName}`, { responseType: 'blob' });
+        
+
+        //**** Details need to be checked ! */
+
+        const authToken = localStorage.getItem('authToken');
+        if (!authToken) {
+            throw new Error('Authentication token not found. Please log in.');
+        }
+
+        // Getting public key address :
+        console.log("doc ID : ", docID , inputValue)
+        await window.ethereum.request({ method: 'eth_requestAccounts' });
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await provider.getSigner();
+        const publicKeyAddress = await signer.getAddress();
+        const response = await axios.get(`http://localhost:3001/files/${fileName}`, {
+          headers: {
+            'Authorization': `Bearer ${authToken}`,
+            'PublicKey': publicKeyAddress,
+            'docID': docID
+          },
+          responseType: 'blob'
+        });
+
         const url = window.URL.createObjectURL(new Blob([response.data]));
         const link = document.createElement('a');
         link.href = url;
@@ -243,18 +283,23 @@ function FileList() {
       setError('You do not have permission to download this file.');
     }
   };
+
   const handleSubmit = async (event) => {
     event.preventDefault(); // Prevent default form submission behavior
-    if (!inputValue) {
+    if (!inputValue1) {
       setNotification("Please enter a file name.");
       return;
+    }
+    if (!inputValue)
+    {
+      setNotification("Please enter your doctor ID.");
     }
     console.log("Submitting for: ", inputValue);
     // You can call checkPermissions or any other function here
     setNotification("Checking permissions for " + inputValue);
     console.log("SUCCESSS IN TOKEN!")
     console.log(myCreds)
-    handleDownload(inputValue);
+    handleDownload(inputValue,inputValue1);
   };
 
   return (
@@ -265,14 +310,16 @@ function FileList() {
       </div>
       <div class="file-list-container" id="fileListContainer">
       <form onSubmit={handleSubmit}>
-        <input type="text" value={inputValue} onChange={handleInputChange} placeholder="Enter doc ID" />
+        <input type="text" value={inputValue} onChange={handleInputChange} placeholder="Enter your username" />
+        {/* <button type="submit">Check Permissions</button> */}
+        <input type="text" value={inputValue1} onChange={handleInputChange1} placeholder="Enter dataset ID" />
         <button type="submit">Check Permissions</button>
       </form>
         {/* {error && <p class="error-message" id="errorMessage">{error}</p>} */}
         {notification && <p class="notification-message" id="notificationMessage">{notification}</p>}
         <ul class="file-list" id="fileList">
           {files.map((file, index) => (
-            <li key={index} class="file-item" id={`fileItem-${index}`} onClick={() => handleDownload(file)}>
+            <li key={index} class="file-item" id={`fileItem-${index}`} onClick={() => handleDownload(inputValue,file)}>
               {file}
             </li>
           ))}
