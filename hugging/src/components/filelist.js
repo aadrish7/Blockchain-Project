@@ -2,14 +2,10 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Web3 from 'web3';
 import './filelist.css';
-
-// ****** New Imports for the Smart Contract Interaction ******
 import myContract from '../artifacts/contracts/SC_20_21_13_28.sol/SC_20_21_13_28.json';
 const ethers = require("ethers");
 
-// Web 3 WSS end-point :
-const NODE_URL =
-  "wss://sepolia.infura.io/ws/v3/f95f2b17b00a4d24b20398a713322329";
+const NODE_URL = "wss://sepolia.infura.io/ws/v3/f95f2b17b00a4d24b20398a713322329";
 const web3 = new Web3(NODE_URL);
 
 function encodeEvent(event) {
@@ -18,36 +14,31 @@ function encodeEvent(event) {
   return keccakHash;
 }
 
-// const myContractAddress = '0xAc966Fa4FB2B6d756FCF32667218F0CB0F0A5711';
-
 const myContractAddress = '0x1c2Ab6b1943f00f40bfff1079709A9394839Cb05';
 
 function FileList() {
   const [inputValue, setInputValue] = useState("");
-  const [inputValue1, setInputValue1] = useState("");
+  const [selectedDataset, setSelectedDataset] = useState("");
   const [files, setFiles] = useState([]);
   const [error, setError] = useState(null);
-  const [myCreds,setmyCreds] = useState('');
+  const [myCreds, setmyCreds] = useState('');
   const [contract, setContract] = useState(null);
   const [account, setAccount] = useState('');
   const [result, setResult] = useState("");
-
-
-  const [notification, setNotification] = useState("");  // State to hold notifications
+  const [notification, setNotification] = useState("");
   const [notification1, setNotification1] = useState("");
   const [notification2, setNotification2] = useState("");
   const [notification3, setNotification3] = useState("");
   const [notification4, setNotification4] = useState("");
 
-
   const handleInputChange = (event) => {
     setInputValue(event.target.value);
   };
 
-  const handleInputChange1 = (event) => {
-    setInputValue1(event.target.value);
+  const handleDatasetChange = (event) => {
+    setSelectedDataset(event.target.value);
   };
-  // ABI and Address of your Smart Contract
+
   const ABI = [{
     "inputs": [
         {
@@ -122,8 +113,8 @@ function FileList() {
     ],
     "stateMutability": "view",
     "type": "function"
-}]; // Your contract's ABI
-  const address = "0xdbAbcc32657D3BDeb8464FdF74033500BA80fA18"; // Your contract's address
+}]; 
+  const address = "0xdbAbcc32657D3BDeb8464FdF74033500BA80fA18"; 
 
   useEffect(() => {
     async function fetchFiles() {
@@ -138,10 +129,10 @@ function FileList() {
 
     fetchFiles();
     initializeWeb3();
-     document.body.classList.add('file-list-page');
-     return () => {
-       document.body.classList.remove('file-list-page');
-     };
+    document.body.classList.add('file-list-page');
+    return () => {
+      document.body.classList.remove('file-list-page');
+    };
   }, []);
 
   const initializeWeb3 = () => {
@@ -165,128 +156,66 @@ function FileList() {
     }
   };
 
-  const checkPermissions = async (fileName) => {
+  const checkPermissions = async (file) => {
     try {
-      // passin the signature token to the server for the details :
-      setNotification1("Extracting your account details from Server using your Signed Token");
-      const authToken = localStorage.getItem('authToken');
-      if (!authToken) {
-          setNotification1("Authentication token not found. Please log in.");
-          throw new Error('Authentication token not found. Please log in.');
+      const fileName = file.replace(/\.[^/.]+$/, "");
+      const result = await contract.methods.getEvaluationResult(fileName).call({ from: account });
+      console.log("Result: ", result);
+
+      if (result == 0) {
+        setNotification4("Evaluation not completed yet. Please wait...");
       }
-      const credentials = await axios.get(`http://localhost:3001/api/individuals/${inputValue}`, {
-          headers: {
-              'Authorization': `Bearer ${authToken}`
-          }
+      if (result == 1) {
+        setNotification1("User is authorized. Please proceed with the download.");
+      } else {
+        setNotification3("User not authorized!");
+      }
+    } catch (error) {
+      console.error("Error checking permissions: ", error);
+      setError('Error checking permissions');
+    }
+  };
+
+  const handleDownload = async (inputValue, file) => {
+    if (!inputValue) {
+      setNotification("Please enter your username.");
+      return;
+    }
+
+    await checkPermissions(file);
+
+    try {
+      const response = await axios.get(`http://localhost:3001/download/${file}`, {
+        responseType: 'blob',
       });
 
-      setNotification1("Credentials retrieved successfully from Server");
-      console.log("credentials", credentials);
-      setmyCreds(credentials);
-      console.log("My creds are : ", myCreds);
-      const { doctorId, hospitalId, specialization, accessRights, location } = credentials.data;
-
-      setNotification2("Invoking Smart Contract with your request");
-      // Interaction with the Smart Contract :
-      if (typeof myContract === 'undefined' || !myContract.abi) {
-        throw new Error('VerifySignature contract ABI is not defined');
-      }
-      const contractABI = myContract.abi;
-      await window.ethereum.request({ method: 'eth_requestAccounts' });
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
-      const contract = new ethers.Contract(myContractAddress, contractABI, signer);
-
-      console.log("Our token is : ", authToken)
-      let mySignature = authToken;
-      console.log(mySignature.length)
-      
-      setNotification3("Waiting for your transaction to be published on Etherium");
-      const tx = await contract.evaluate(fileName, doctorId, hospitalId, specialization, accessRights, location, mySignature);
-      const receipt = await tx.wait();
-      console.log("your transaction reciept is : ",receipt)
-      console.log("Decoding the data : ", receipt.logs);
-      console.log(web3.eth.abi.decodeParameter('string', receipt.logs[0].data));
-      return true;
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', file);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setNotification("File downloaded successfully.");
     } catch (error) {
-      console.error('Error checking permissions:', error);
-      return false;
+      console.error('Error downloading file: ', error);
+      setError('Error downloading file');
     }
   };
 
-  const handleDownload = async (docID , fileName) => {
-    if (!contract) {
-      setError('Smart contract not connected. Please check MetaMask.');
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    if (!inputValue) {
+      setNotification("Please enter your username.");
       return;
     }
-
-    if (!inputValue)
-    {
-      setNotification("Please enter your doctor ID.");
-    }    
- 
-    if (!docID) {
-      setNotification("Please enter your doctor ID.");
-      return;
-    } 
-    setInputValue1(fileName)
-    let isAllowed = await checkPermissions(fileName);
-    if (isAllowed) {
-      try {
-        const authToken = localStorage.getItem('authToken');
-        if (!authToken) {
-            throw new Error('Authentication token not found. Please log in.');
-        }
-
-        // Getting public key address :
-        setNotification3("Transaction has been published, now waiting for backend based on Smart contract's decision");
-        console.log("doc ID : ", docID , inputValue)
-        await window.ethereum.request({ method: 'eth_requestAccounts' });
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        const signer = await provider.getSigner();
-        const publicKeyAddress = await signer.getAddress();
-        const response = await axios.get(`http://localhost:3001/files/${fileName}`, {
-          headers: {
-            'Authorization': `Bearer ${authToken}`,
-            'PublicKey': publicKeyAddress,
-            'docID': docID,
-            'datasetID':fileName
-          },
-          responseType: 'blob'
-        });
-
-        const url = window.URL.createObjectURL(new Blob([response.data]));
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', fileName);
-        document.body.appendChild(link);
-        link.click();
-        link.parentNode.removeChild(link);
-        setNotification4("Download sucessfully for " + fileName);
-        setResult("");
-      } catch (error) {
-        setError('Error downloading file');
-      }
-    } else {
-      setError('You do not have permission to download this file.');
-    }
-  };
-
-  const handleSubmit = async (event) => {
-    event.preventDefault(); // Prevent default form submission behavior
-    if (!inputValue1) {
-      setNotification("Please enter a file name!");
-      return;
-    }
-    if (!inputValue)
-    {
-      setNotification("Please enter your doctor ID!");
+    if (!selectedDataset) {
+      setNotification("Please select a dataset.");
       return;
     }
     console.log("Submitting for: ", inputValue);
-    setNotification("Checking your permissions for " + inputValue1);
-    console.log(myCreds)
-    handleDownload(inputValue,inputValue1);
+    setNotification("Checking your permissions for " + selectedDataset);
+    handleDownload(inputValue, selectedDataset);
   };
 
   return (
@@ -296,23 +225,27 @@ function FileList() {
         <button class="ConnectMetamask" onClick={connectMetamask}>Connect MetaMask</button>
       </div>
       <div class="file-list-container" id="fileListContainer">
-      <form onSubmit={handleSubmit}>
-
-        <input type="text" value={inputValue} onChange={handleInputChange} placeholder="Enter your username" />
-        <input type="text" value={inputValue1} onChange={handleInputChange1} placeholder="Enter dataset ID" />
-        <button class="CheckPermissions" type="submit">Check Permissions & Download File</button>
-      </form>
+        <form onSubmit={handleSubmit}>
+          <input style={{backgroundColor:"white"}} type="text" value={inputValue} onChange={handleInputChange} placeholder="Enter your username" />
+          <select style={{backgroundColor:"white", width:"calc(100% - 40px)", color: 'grey'}} value={selectedDataset} onChange={handleDatasetChange}>
+            <option value="" disabled>Select a dataset</option>
+            {files.map((file, index) => (
+              <option key={index} value={file}>{file}</option>
+            ))}
+          </select>
+          <button class="CheckPermissions" type="submit">Check Permissions & Download File</button>
+        </form>
         {notification && <p class="notification-message" id="notificationMessage">{notification}</p>}
         {notification1 && <p class="notification-message" id="notificationMessage">{notification1}</p>}
         {notification3 && <p class="notification-message" id="notificationMessage">{notification3}</p>}
         {notification4 && <p class="notification-message" id="notificationMessage">{notification4}</p>}
-        {error && <p class="notification-message" id="notificationMessage">{error}</p>}
+        {error && <p class="notification-message error-message" id="notificationMessage">{error}</p>}
         <ul class="file-list" id="fileList">
-          {files.map((file, index) => (
-            <li key={index} class="file-item" id={`fileItem-${index}`} onClick={() => handleDownload(inputValue,file)}>
+          {/* {files.map((file, index) => (
+            <li key={index} class="file-item" id={`fileItem-${index}`} onClick={() => handleDownload(inputValue, file)}>
               {file}
             </li>
-          ))}
+          ))} */}
         </ul>
       </div>
     </>
