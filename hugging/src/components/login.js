@@ -35,6 +35,9 @@ const Login = () => {
                 // Redirect to another route upon successful login
                 setUsername(formData.username); 
                 window.location.href = '/userpage'; // Use window.location.href to navigate
+                const token = response.data.token;
+                console.log("the token is : ", token)
+                localStorage.setItem('authToken', token);
             }
             // Store token in local storage or session storage
             // Redirect to dashboard or protected route

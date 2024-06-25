@@ -10,3 +10,6 @@ Contract deployed to: 0xAc966Fa4FB2B6d756FCF32667218F0CB0F0A5711;
 
 ** Ashish's Contract Modified :
 Contract deployed to: 0x0c00558dd823b1b093DD48D092C618319087D243
+
+** Ashish Contract Modified 2x :
+Contract deployed to: 0x1c2Ab6b1943f00f40bfff1079709A9394839Cb05
