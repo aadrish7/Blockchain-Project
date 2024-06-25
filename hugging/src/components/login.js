@@ -31,7 +31,6 @@ const Login = () => {
         e.preventDefault();
         try {
             const response = await axios.post('http://localhost:3001/auth/login', formData);
-
             if (response.status === 200) {
                 // Redirect to another route upon successful login
                 setUsername(formData.username); 

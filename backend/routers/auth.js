@@ -30,6 +30,7 @@ async function signMessage(message) {
     const originalMessageHash = ethUtil.keccak256(Buffer.from(message));
     const wallet = new ethers.Wallet(PRIVATEKEY);
     const signature = await wallet.signMessage(originalMessageHash);
+    console.log("Signature created is : ", signature)
     return signature;
 
 
@@ -110,6 +111,7 @@ router.post('/login', async (req, res) => {
         // Generating our own custom token :
 
         let tokenString = individual.doctorId + "," + individual.hospitalId + "," + individual.specialization + "," + individual.location; 
+        console.log("The token stirng is : ", tokenString)
         let tokenSignature = await signMessage(tokenString)  
 
         // res.status(200).json({ message: 'Login successful', token: token });
