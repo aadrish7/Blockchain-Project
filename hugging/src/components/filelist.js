@@ -304,7 +304,6 @@ function FileList() {
       </form>
         {notification && <p class="notification-message" id="notificationMessage">{notification}</p>}
         {notification1 && <p class="notification-message" id="notificationMessage">{notification1}</p>}
-        {notification2 && <p class="notification-message" id="notificationMessage">{notification2}</p>}
         {notification3 && <p class="notification-message" id="notificationMessage">{notification3}</p>}
         {notification4 && <p class="notification-message" id="notificationMessage">{notification4}</p>}
         {error && <p class="notification-message" id="notificationMessage">{error}</p>}
