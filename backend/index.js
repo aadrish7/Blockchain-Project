@@ -31,12 +31,12 @@ const accessMap = new Map();
 
 const jwtSecretKey = 'secret_key'; // Use a secure key and keep it safe
 const PRIVATEKEY = '29a51884dea81b2eb575cd46bd51bd703cfb4c45e44ff0ee00f113b7b4339088';
-const CONTRACTADDRESS = '0xAc966Fa4FB2B6d756FCF32667218F0CB0F0A5711';
+const CONTRACTADDRESS = '0x0c00558dd823b1b093DD48D092C618319087D243';
 const NODE_URL =
   "wss://sepolia.infura.io/ws/v3/f95f2b17b00a4d24b20398a713322329";
 const myWeb3 = new Web3(new Web3.providers.WebsocketProvider(NODE_URL));
 const logsFilter = {
-  address: "0xAc966Fa4FB2B6d756FCF32667218F0CB0F0A5711", // Contract address
+  address: "0x0c00558dd823b1b093DD48D092C618319087D243", // Contract address
   topics: [
     encodeEvent("SignUpResult(string)"),
   ],
@@ -80,6 +80,7 @@ async function verifySignature (message , givenSignature) {
   else 
   {
     console.log("Signature verified incorrectly !")
+    console.log(signature, "   ",givenSignature)
     return false
   }
 }
@@ -117,13 +118,16 @@ const handleLogs = (log) => {
   console.log('Received log:', log);
   console.log(myWeb3.eth.abi.decodeParameter('string', log.data));
 
-
+  let decodedData = myWeb3.eth.abi.decodeParameter('string', log.data);
   // handling the access accordinly in Memory(RAM for now) : 
   const [decision, publicKey, datasetID] = decodedData.split(':');
   
   // Only add to the map if the decision is true
   if (decision === 'true') {
-    const key = `${publicKey}:${datasetID}`;
+    // const key = `${publicKey}:${datasetID}`;
+    const key = publicKey.trim();
+    // const key = publicKey;
+    console.log("The key is : ", key)
     const blockNumber = log.blockNumber;
     
     // Store the block number in the map
@@ -189,13 +193,17 @@ app.get("/files/:fileName", async (req, res) => {
 
   // Verify the Signature to ensure that it's the exactly the same person who wants the access
 
+  const fileName = req.params.fileName;
   // Extract headers
   const authToken = req.headers['authorization'];
   const publicKey = req.headers['publickey'];
-  const docId = req.headers['docID'];
+  const docId = req.headers['docid'];
+
+
+  console.log("Doctor ID is : ", docId)
 
   // find the doc from the database :
-  const individual = await Individual.findOne({ username: username });
+  const individual = await Individual.findOne({ username : docId });
   console.log(individual);
   if (!individual) {
     return res.status(404).send({ message: 'Individual not found' });
@@ -204,40 +212,40 @@ app.get("/files/:fileName", async (req, res) => {
   // verify token:
   let stringifiedMsg = individual.doctorId + "," + individual.hospitalId + "," + individual.specialization + "," + individual.location; 
   console.log("String message is : ", stringifiedMsg)
-  let boolVerifySignature = await verifySignature(stringifiedMsg , token) 
-  if ( boolVerifySignature ===  true )
-  {
-    console.log("Token verification : Sucess!!")
-    res.json(individual);
-  }
-  else 
+  let boolVerifySignature = await verifySignature(stringifiedMsg , authToken) 
+  if ( boolVerifySignature ===  false )
   {
     console.log("Token verification : Failed!!")
     return res.status(404).send({ message: 'Token verification failed !' });
   }
+ 
 
   // check if there is mapping available if yes then persue and delete it else throw errror :
-  let myKey = publicKey+":"+fileName;
-  
-  if (accessMap.has(key)) {
-    const value = accessMap.get(key);
-    console.log(`Found key: ${key}, value: ${value}`);
+  // let myKey = publicKey+":"+fileName;
+  let myKey = publicKey.trim().toLowerCase();
+  if (accessMap.has(myKey)) {
+    const value = accessMap.get(myKey);
+    console.log(`Found key: ${myKey}, value: ${value}`);
     
     // Delete the entry
-    accessMap.delete(key);
-    console.log(`Deleted key: ${key}`);
+    accessMap.delete(myKey);
+    console.log(`Deleted key: ${myKey}`);
   } else {
-    console.log(`Key not found: ${key}`);
+    console.log(`Key not found: ${myKey}`);
+    console.log('All keys in accessMap:');
+    for (let k of accessMap.keys()) {
+      console.log(k);
+    }
     return res.status(404).send({ message: 'Permisssion not given !' });
   }
-
-
 
   // After verifying, check if any relevant event for that block has been emmitted or not ?
 
   // If event released, then grant the access for download 
 
-  const fileName = req.params.fileName;
+
+  
+  // const fileName = req.params.fileName;
   const filePath = path.join(__dirname, 'uploads', fileName);
   console.log("filePath", filePath);
   res.download(filePath, fileName, (err) => {

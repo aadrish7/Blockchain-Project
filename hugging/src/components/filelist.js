@@ -18,9 +18,9 @@ function encodeEvent(event) {
   return keccakHash;
 }
 
-const myContractAddress = '0xAc966Fa4FB2B6d756FCF32667218F0CB0F0A5711';
+// const myContractAddress = '0xAc966Fa4FB2B6d756FCF32667218F0CB0F0A5711';
 
-
+const myContractAddress = '0x0c00558dd823b1b093DD48D092C618319087D243';
 
 function FileList() {
   const [inputValue, setInputValue] = useState("");
@@ -193,11 +193,12 @@ function FileList() {
       // let mySignatureBytes = ethers.hexlify(mySignature);
       
 
-      const tx = await contract.evaluate2(fileName, doctorId, hospitalId, specialization, accessRights, location, mySignature);
+      const tx = await contract.evaluate(fileName, doctorId, hospitalId, specialization, accessRights, location, mySignature);
       const receipt = await tx.wait();
       console.log("your transaction reciept is : ",receipt)
       console.log("Decoding the data : ", receipt.logs);
       console.log(web3.eth.abi.decodeParameter('string', receipt.logs[0].data));
+      return true;
 
 
       // const temp = await contract.methods.evaluate(doctorId, doctorId, hospitalId, specialization, accessRights, location).call({ from: account });
@@ -215,7 +216,7 @@ function FileList() {
     }
   };
 
-  const handleDownload = async (fileName) => {
+  const handleDownload = async (docID , fileName) => {
     if (!contract) {
       setError('Smart contract not connected. Please check MetaMask.');
       return;
@@ -226,12 +227,17 @@ function FileList() {
     {
       setNotification("Please enter your doctor ID.");
     }    
+    // Demanding the doc ID :
+    if (!docID) {
+      setNotification("Please enter your doctor ID.");
+      return; // Add return here to prevent further execution
+    } 
     
     console.log("smart contract invoked successfully");
     setInputValue1(fileName)
     let isAllowed = await checkPermissions(fileName);
 
-    isAllowed = true;
+    // isAllowed = true;
     // Need Modifications here : to get access from the Server to get the file 
     
     if (isAllowed) {
@@ -247,6 +253,7 @@ function FileList() {
         }
 
         // Getting public key address :
+        console.log("doc ID : ", docID , inputValue)
         await window.ethereum.request({ method: 'eth_requestAccounts' });
         const provider = new ethers.BrowserProvider(window.ethereum);
         const signer = await provider.getSigner();
@@ -255,7 +262,7 @@ function FileList() {
           headers: {
             'Authorization': `Bearer ${authToken}`,
             'PublicKey': publicKeyAddress,
-            'docID': inputValue
+            'docID': docID
           },
           responseType: 'blob'
         });
@@ -292,7 +299,7 @@ function FileList() {
     setNotification("Checking permissions for " + inputValue);
     console.log("SUCCESSS IN TOKEN!")
     console.log(myCreds)
-    handleDownload(inputValue1);
+    handleDownload(inputValue,inputValue1);
   };
 
   return (
@@ -303,7 +310,7 @@ function FileList() {
       </div>
       <div class="file-list-container" id="fileListContainer">
       <form onSubmit={handleSubmit}>
-        <input type="text" value={inputValue} onChange={handleInputChange} placeholder="Enter doc ID" />
+        <input type="text" value={inputValue} onChange={handleInputChange} placeholder="Enter your username" />
         {/* <button type="submit">Check Permissions</button> */}
         <input type="text" value={inputValue1} onChange={handleInputChange1} placeholder="Enter dataset ID" />
         <button type="submit">Check Permissions</button>
@@ -312,7 +319,7 @@ function FileList() {
         {notification && <p class="notification-message" id="notificationMessage">{notification}</p>}
         <ul class="file-list" id="fileList">
           {files.map((file, index) => (
-            <li key={index} class="file-item" id={`fileItem-${index}`} onClick={() => handleDownload(file)}>
+            <li key={index} class="file-item" id={`fileItem-${index}`} onClick={() => handleDownload(inputValue,file)}>
               {file}
             </li>
           ))}
