@@ -300,7 +300,7 @@ function FileList() {
 
         <input type="text" value={inputValue} onChange={handleInputChange} placeholder="Enter your username" />
         <input type="text" value={inputValue1} onChange={handleInputChange1} placeholder="Enter dataset ID" />
-        <button type="submit">Check Permissions & Download File</button>
+        <button class="CheckPermissions" type="submit">Check Permissions & Download File</button>
       </form>
         {notification && <p class="notification-message" id="notificationMessage">{notification}</p>}
         {notification1 && <p class="notification-message" id="notificationMessage">{notification1}</p>}

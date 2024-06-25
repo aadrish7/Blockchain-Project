@@ -82,7 +82,7 @@ router.post('/login', async (req, res) => {
 router.post('/adminLogin', async (req, res) => {
     try {
         const { password } = req.body; 
-        if (password === 'helloworld111') {
+        if (password === 'hello123') {
             res.status(200).json({ message: 'Login successful', valid: true });
         } else {
             res.status(401).json({ message: 'Login failed', valid: false });

@@ -59,6 +59,11 @@ body.file-list-page {
   
 }
 
+.CheckPermissions{
+  margin-left: 20%;
+
+}
+
 .notification-message {
   margin-top: 20px;
   padding: 10px;

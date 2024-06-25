@@ -4,6 +4,7 @@ body.signup-page {
   background-position: center;
   margin: 0;
   font-family: Arial, sans-serif;
+  margin-bottom: 13%;
 }
 
 .signup-success {
@@ -49,6 +50,8 @@ body.signup-page {
   margin-bottom: 30px;
   transform: translateY(-20px);
   animation: slideIn 1s forwards;
+  font-size: 24px; /* Adjust the size to your preference */
+  font-weight: 700; /* Adjust the boldness to your preference */
 }
 
 /* Form styles */

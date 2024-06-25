@@ -8,6 +8,7 @@ import FileUpload from './components/fileupload';
 import FileList from './components/filelist';
 import { UsernameProvider } from './userdata/usernamecontext'; // Import UsernameProvider
 import SmartContract from './components/smartcontract';
+import PreSignup from './components/presignup';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
             <Route path="/fileupload" element={<FileUpload />} />
             <Route path="/filelist" element={<FileList />} />
             <Route path="/smartcontract" element={<SmartContract />} />
+            <Route path="/presignup" element={<PreSignup />} />
           </Routes>
         </div>
       </Router>
