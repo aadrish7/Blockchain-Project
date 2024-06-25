@@ -1,39 +1,112 @@
+/* filelist.css */
+body.file-list-page {
+  background-image: url('blur.png'); /* Replace with the actual URL of the generated image */
+  background-size: cover;
+  background-position: center;
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+.ConnectMetamask {
+  padding: 10px 20px;
+  align-items: center;
+  margin-left:43.5%;
+  margin-bottom: 10px;
+}
+
+.header-title {
+  text-align: center;
+  color: #050C9C; /* Dark blue for the title */
+  margin-bottom: 10px;
+  transform: translateY(-20px);
+  animation: slideIn 1s forwards;
+  
+}
+
+.checkPermission {
+  padding: 10px 20px;
+  margin-left: 25%;
+
+}
+
+.file-box{
+  padding: 10px 20px;
+  margin-left: 50%;
+  margin-top: 50px;
+  align-items: center;
+}
+
 .file-list-container {
-    background-color: #f8f9fa;
-    border-radius: 8px;
-    padding: 20px;
-    max-width: 600px;
-    margin: auto;
-  }
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: rgba(167, 230, 255, 0.9); /* Lightest blue with some transparency */
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  opacity: 0;
+  animation: fadeIn 1s forwards;
+}
+
+.header-title h2 {
+  color: #050C9C; /* Dark blue for the title */   
+  margin-bottom: 20px;
+  transform: translateY(-20px);
+  animation: slideIn 1s forwards; 
+  margin-left: 50px;
   
-  .header-title h2{
-    color: #343a40;
-    text-align: center;
-    margin-bottom: 20px;
-  }
-  
-  .error-message {
-    color: #dc3545;
-    font-style: italic;
-    margin-bottom: 10px;
-  }
-  
-  .file-list {
-    list-style-type: none;
-    padding: 0;
-  }
-  
-  .file-item {
-    background-color: #e9ecef;
-    border: 1px solid #dee2e6;
-    border-radius: 4px;
-    margin-bottom: 10px;
-    padding: 10px;
-    transition: background-color 0.3s ease;
-    cursor: pointer;
-  }
-  
-  .file-item:hover {
-    background-color: #ced4da;
-  }
-  
+}
+
+.notification-message {
+  margin-top: 20px;
+  padding: 10px;
+  border: 1px solid #3572EF;
+  border-radius: 4px;
+  background-color: #A7E6FF;
+  color: #050C9C;
+  text-align: center;
+}
+
+.error-message {
+  margin-top: 20px;
+  padding: 10px;
+  border: 1px solid #FF4B4B;
+  border-radius: 4px;
+  background-color: #FFCCCC;
+  color: #FF0000;
+  text-align: center;
+}
+
+.file-list {
+  list-style-type: none;
+  padding: 0;
+  width: 100%;
+}
+
+.file-item {
+  background-color: #A7E6FF; /* Lightest blue for the item background */
+  border: 1px solid #3572EF; /* Medium blue for item borders */
+  border-radius: 4px;
+  margin-bottom: 10px;
+  padding: 10px;
+  transition: background-color 0.3s ease;
+  cursor: pointer;
+  color: #050C9C; /* Dark blue for the item text */
+  text-align: center;
+}
+
+.file-item:hover {
+  background-color: #3ABEF9; /* Lighter blue for hover state */
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { transform: translateY(-20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}

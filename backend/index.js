@@ -172,6 +172,12 @@ const upload = multer({ storage });
 app.post('/upload', upload.single('file'), (req, res) => {
   console.log("req.body", req.body);
   console.log("req.file", req.file);
+  // Sending a response back to the client
+  if (req.file) {
+    res.status(200).json({ message: "File uploaded successfully!" });
+  } else {
+    res.status(400).json({ message: "File upload failed." });
+  }
 });
 
 app.get("/files", (req, res) => {
