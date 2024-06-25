@@ -117,7 +117,13 @@ contract SC_20_21_13_28 {
 
         string memory myAddress = convert();
         string memory decision = string(
-            abi.encodePacked(permit ? "true" : "false", ":", myAddress)
+            abi.encodePacked(
+                permit ? "true" : "false",
+                ":",
+                myAddress,
+                ":",
+                datasetID
+            )
         );
 
         emit SignUpResult(decision);

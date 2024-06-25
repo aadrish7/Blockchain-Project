@@ -15,16 +15,6 @@ const Individual = require('../models/individual'); // Import the Individual mod
 // 3rd party's private key :
 const PRIVATEKEY = '29a51884dea81b2eb575cd46bd51bd703cfb4c45e44ff0ee00f113b7b4339088'
 
-// function signMessage(message)
-// {
-//     const privateKeyBuffer = Buffer.from(PRIVATEKEY, 'hex')
-//     const messageHash = ethUtil.keccak256(Buffer.from(message));
-//     const { signature } = secp256k1.ecdsaSign(messageHash, privateKeyBuffer);
-//     const signatureHex = Buffer.from(signature).toString('hex');
-//     return signatureHex;
-// }
-
-
 async function signMessage(message) {
 
     const originalMessageHash = ethUtil.keccak256(Buffer.from(message));
@@ -32,36 +22,13 @@ async function signMessage(message) {
     const signature = await wallet.signMessage(originalMessageHash);
     console.log("Signature created is : ", signature)
     return signature;
-
-
-
-
-
-    // const privateKeyBuffer = Buffer.from(PRIVATEKEY, 'hex');
-
-    // // Step 1: Hash the original message
-    // const messageHash = ethUtil.keccak256(Buffer.from(message));
-    // console.log("Original Message Hash is:", Buffer.from(messageHash).toString('hex'));
-
-    // // Step 2: Prefix the message hash
-    // const prefix = "\x19Ethereum Signed Message:\n32";
-    // const prefixedMessage = ethUtil.keccak256(Buffer.concat([Buffer.from(prefix), messageHash]));
-
-    // console.log("Prefixed Message Hash is:", Buffer.from(prefixedMessage).toString('hex'));
-
-    // // Step 3: Sign the final hash
-    // const { signature } = secp256k1.ecdsaSign(prefixedMessage, privateKeyBuffer);
-    // // const signatureHex = Buffer.from(signature).toString('hex');
-    // const signatureHex = `0x${Buffer.from(signature).toString('hex')}`;
-    
-    // return signatureHex;
 }
 
 
 // Signup Route
 router.post('/signup', async (req, res) => {
     try {
-        // Check if the username already exists
+
         const existingUser = await Individual.findOne({ username: req.body.username });
         if (existingUser) {
             return res.status(400).json({ message: 'Username already exists' });
@@ -90,14 +57,11 @@ router.post('/signup', async (req, res) => {
 router.post('/login', async (req, res) => {
     try {
         console.log("req.body", req.body)
-        // Find the individual by username
         const individual = await Individual.findOne({ username: req.body.username });
-
         if (!individual) {
             return res.status(400).json({ message: 'Invalid username!' });
         }
-        
-        // Check the password
+        // Checkin the password
         const passwordMatch = req.body.password === individual.password;
         console.log("passwordMatch", passwordMatch)
         if (!passwordMatch) {
@@ -105,20 +69,28 @@ router.post('/login', async (req, res) => {
         }
         console.log("login successful")
 
-        // // Generate JWT token
-        // const token = jwt.sign({ userId: individual._id }, 'your_secret_key_here', { expiresIn: '1h' });
-
-        // Generating our own custom token :
-
+        // Creating token using our private key
         let tokenString = individual.doctorId + "," + individual.hospitalId + "," + individual.specialization + "," + individual.location; 
         console.log("The token stirng is : ", tokenString)
         let tokenSignature = await signMessage(tokenString)  
-
-        // res.status(200).json({ message: 'Login successful', token: token });
         res.status(200).json({ message: 'Login successful', token: tokenSignature });
     } catch (error) {
         res.status(500).json({ message: 'Login failed', error: error.message });
     }
 });
+
+router.post('/adminLogin', async (req, res) => {
+    try {
+        const { password } = req.body; 
+        if (password === 'helloworld111') {
+            res.status(200).json({ message: 'Login successful', valid: true });
+        } else {
+            res.status(401).json({ message: 'Login failed', valid: false });
+        }
+    } catch (error) {
+        res.status(500).json({ message: 'Login failed', error: error.message });
+    }
+});
+
 
 module.exports = router;

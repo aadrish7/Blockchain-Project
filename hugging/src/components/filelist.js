@@ -20,7 +20,7 @@ function encodeEvent(event) {
 
 // const myContractAddress = '0xAc966Fa4FB2B6d756FCF32667218F0CB0F0A5711';
 
-const myContractAddress = '0x0c00558dd823b1b093DD48D092C618319087D243';
+const myContractAddress = '0x1c2Ab6b1943f00f40bfff1079709A9394839Cb05';
 
 function FileList() {
   const [inputValue, setInputValue] = useState("");
@@ -31,7 +31,15 @@ function FileList() {
   const [contract, setContract] = useState(null);
   const [account, setAccount] = useState('');
   const [result, setResult] = useState("");
+
+
   const [notification, setNotification] = useState("");  // State to hold notifications
+  const [notification1, setNotification1] = useState("");
+  const [notification2, setNotification2] = useState("");
+  const [notification3, setNotification3] = useState("");
+  const [notification4, setNotification4] = useState("");
+
+
   const handleInputChange = (event) => {
     setInputValue(event.target.value);
   };
@@ -130,10 +138,7 @@ function FileList() {
 
     fetchFiles();
     initializeWeb3();
-     // Add the class to the body when the component mounts
      document.body.classList.add('file-list-page');
-
-     // Clean up the class when the component unmounts
      return () => {
        document.body.classList.remove('file-list-page');
      };
@@ -163,8 +168,10 @@ function FileList() {
   const checkPermissions = async (fileName) => {
     try {
       // passin the signature token to the server for the details :
+      setNotification1("Extracting your account details from Server using your Signed Token");
       const authToken = localStorage.getItem('authToken');
       if (!authToken) {
+          setNotification1("Authentication token not found. Please log in.");
           throw new Error('Authentication token not found. Please log in.');
       }
       const credentials = await axios.get(`http://localhost:3001/api/individuals/${inputValue}`, {
@@ -173,13 +180,13 @@ function FileList() {
           }
       });
 
-      // const credentials = await axios.get(`http://localhost:3001/api/individuals/${inputValue}`);
-      setNotification("Credentials retrieved successfully.");
+      setNotification1("Credentials retrieved successfully from Server");
       console.log("credentials", credentials);
       setmyCreds(credentials);
       console.log("My creds are : ", myCreds);
       const { doctorId, hospitalId, specialization, accessRights, location } = credentials.data;
 
+      setNotification2("Invoking Smart Contract with your request");
       // Interaction with the Smart Contract :
       if (typeof myContract === 'undefined' || !myContract.abi) {
         throw new Error('VerifySignature contract ABI is not defined');
@@ -190,33 +197,17 @@ function FileList() {
       const signer = await provider.getSigner();
       const contract = new ethers.Contract(myContractAddress, contractABI, signer);
 
-      // Parsing && converting the token to 32 bytes:
       console.log("Our token is : ", authToken)
       let mySignature = authToken;
       console.log(mySignature.length)
-      // if (mySignature && mySignature.startsWith('0x')) {
-      //   mySignature = mySignature.slice(2);
-      // }
-      // let mySignatureBytes = ethers.hexlify(mySignature);
       
-
+      setNotification3("Waiting for your transaction to be published on Etherium");
       const tx = await contract.evaluate(fileName, doctorId, hospitalId, specialization, accessRights, location, mySignature);
       const receipt = await tx.wait();
       console.log("your transaction reciept is : ",receipt)
       console.log("Decoding the data : ", receipt.logs);
       console.log(web3.eth.abi.decodeParameter('string', receipt.logs[0].data));
       return true;
-
-
-      // const temp = await contract.methods.evaluate(doctorId, doctorId, hospitalId, specialization, accessRights, location).call({ from: account });
-      // setTimeout(async () => {
-      //   const evaluationResult = await contract.methods.getEvaluationResult(doctorId).call();
-      //   console.log('Evaluation result:', evaluationResult);
-      //   setResult(evaluationResult);
-      //   setNotification("Smart contract invoked successfully. Result: " + evaluationResult);
-      // }, 10000);
-      // console.log("Result", result);
-      // return result === "Permit";
     } catch (error) {
       console.error('Error checking permissions:', error);
       return false;
@@ -229,37 +220,26 @@ function FileList() {
       return;
     }
 
-    // Demanding the doc ID :
     if (!inputValue)
     {
       setNotification("Please enter your doctor ID.");
     }    
-    // Demanding the doc ID :
+ 
     if (!docID) {
       setNotification("Please enter your doctor ID.");
-      return; // Add return here to prevent further execution
+      return;
     } 
-    
-    console.log("smart contract invoked successfully");
     setInputValue1(fileName)
     let isAllowed = await checkPermissions(fileName);
-
-    // isAllowed = true;
-    // Need Modifications here : to get access from the Server to get the file 
-    
     if (isAllowed) {
       try {
-        // const response = await axios.get(`http://localhost:3001/files/${fileName}`, { responseType: 'blob' });
-        
-
-        //**** Details need to be checked ! */
-
         const authToken = localStorage.getItem('authToken');
         if (!authToken) {
             throw new Error('Authentication token not found. Please log in.');
         }
 
         // Getting public key address :
+        setNotification3("Transaction has been published, now waiting for backend based on Smart contract's decision");
         console.log("doc ID : ", docID , inputValue)
         await window.ethereum.request({ method: 'eth_requestAccounts' });
         const provider = new ethers.BrowserProvider(window.ethereum);
@@ -269,7 +249,8 @@ function FileList() {
           headers: {
             'Authorization': `Bearer ${authToken}`,
             'PublicKey': publicKeyAddress,
-            'docID': docID
+            'docID': docID,
+            'datasetID':fileName
           },
           responseType: 'blob'
         });
@@ -281,7 +262,7 @@ function FileList() {
         document.body.appendChild(link);
         link.click();
         link.parentNode.removeChild(link);
-        setNotification("Download ready: " + fileName);
+        setNotification4("Download sucessfully for " + fileName);
         setResult("");
       } catch (error) {
         setError('Error downloading file');
@@ -294,16 +275,17 @@ function FileList() {
   const handleSubmit = async (event) => {
     event.preventDefault(); // Prevent default form submission behavior
     if (!inputValue1) {
-      setNotification("Please enter a file name.");
+      setNotification("Please enter a file name!");
       return;
     }
     if (!inputValue)
     {
-      setNotification("Please enter your doctor ID.");
+      setNotification("Please enter your doctor ID!");
+      return;
     }
     console.log("Submitting for: ", inputValue);
     // You can call checkPermissions or any other function here
-    setNotification("Checking permissions for " + inputValue);
+    setNotification("Checking your permissions for " + inputValue1);
     console.log("SUCCESSS IN TOKEN!")
     console.log(myCreds)
     handleDownload(inputValue,inputValue1);
@@ -319,12 +301,15 @@ function FileList() {
       <form onSubmit={handleSubmit}>
 
         <input type="text" value={inputValue} onChange={handleInputChange} placeholder="Enter your username" />
-        {/* <button type="submit">Check Permissions</button> */}
         <input type="text" value={inputValue1} onChange={handleInputChange1} placeholder="Enter dataset ID" />
-        <button type="submit">Check Permissions</button>
+        <button type="submit">Check Permissions & Download File</button>
       </form>
-        {/* {error && <p class="error-message" id="errorMessage">{error}</p>} */}
         {notification && <p class="notification-message" id="notificationMessage">{notification}</p>}
+        {notification1 && <p class="notification-message" id="notificationMessage">{notification1}</p>}
+        {notification2 && <p class="notification-message" id="notificationMessage">{notification2}</p>}
+        {notification3 && <p class="notification-message" id="notificationMessage">{notification3}</p>}
+        {notification4 && <p class="notification-message" id="notificationMessage">{notification4}</p>}
+        {error && <p class="notification-message" id="notificationMessage">{error}</p>}
         <ul class="file-list" id="fileList">
           {files.map((file, index) => (
             <li key={index} class="file-item" id={`fileItem-${index}`} onClick={() => handleDownload(inputValue,file)}>
