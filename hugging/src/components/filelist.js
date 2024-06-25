@@ -284,9 +284,7 @@ function FileList() {
       return;
     }
     console.log("Submitting for: ", inputValue);
-    // You can call checkPermissions or any other function here
     setNotification("Checking your permissions for " + inputValue1);
-    console.log("SUCCESSS IN TOKEN!")
     console.log(myCreds)
     handleDownload(inputValue,inputValue1);
   };
