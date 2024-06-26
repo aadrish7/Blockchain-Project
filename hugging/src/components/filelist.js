@@ -41,7 +41,7 @@ function FileList() {
 
   // These state variables are used to unveil the backend & smart Contract processing
 
-  const [notification5, setNotification5] = useState("Your Token provided is " + localStorage.getItem("authToken"));
+  const [notification5, setNotification5] = useState("Your Token is " + localStorage.getItem("authToken"));
   const [notification6, setNotification6] = useState("");
   const [notification7, setNotification7] = useState("");
   // const [notification8, setNotification8] = useState("");  
@@ -193,8 +193,8 @@ function FileList() {
       setmyCreds(credentials);
       console.log("My creds are : ", myCreds);
       const { doctorId, hospitalId, specialization, accessRights, location } = credentials.data;
-      setNotification6("You have sucessfully retrieved following details from Service Provider : " +  doctorId +  " , " + hospitalId + " , " + specialization + " , " + accessRights + " , " + location);
-
+      setNotification6(`Retrieved Details:\nDoctor ID: ${doctorId}\nHospital ID: ${hospitalId}\nSpecialization: ${specialization}\nAccess Rights: ${accessRights}\nLocation: ${location}`);
+      
       setNotification2("Invoking Smart Contract with your request");
       // Interaction with the Smart Contract :
       if (typeof myContract === 'undefined' || !myContract.abi) {
@@ -321,11 +321,16 @@ function FileList() {
       </div>
       <div class="file-list-container" id="fileListContainer">
       <form onSubmit={handleSubmit}>
+          <input style={{backgroundColor:"white"}} type="text" value={inputValue} onChange={handleInputChange} placeholder="Enter your username" />
+          <select style={{backgroundColor:"white", width:"calc(100% - 40px)", color: 'grey'}} value={inputValue1} onChange={handleInputChange1}>
+            <option value="" disabled>Select a dataset</option>
+            {files.map((file, index) => (
+              <option key={index} value={file}>{file}</option>
+            ))}
+          </select>
+          <button class="CheckPermissions" type="submit">Check Permissions & Download File</button>
+        </form>
 
-        <input type="text" value={inputValue} onChange={handleInputChange} placeholder="Enter your username" />
-        <input type="text" value={inputValue1} onChange={handleInputChange1} placeholder="Enter dataset ID" />
-        <button class="CheckPermissions" type="submit">Check Permissions & Download File</button>
-      </form>
         {notification && <p class="notification-message" id="notificationMessage">{notification}</p>}
         {notification1 && <p class="notification-message" id="notificationMessage">{notification1}</p>}
 
@@ -346,11 +351,11 @@ function FileList() {
         
         {error && <p class="notification-message" id="notificationMessage">{error}</p>}
         <ul class="file-list" id="fileList">
-          {files.map((file, index) => (
+          {/* {files.map((file, index) => (
             <li key={index} class="file-item" id={`fileItem-${index}`} onClick={() => handleDownload(inputValue,file)}>
               {file}
             </li>
-          ))}
+          ))} */}
         </ul>
       </div>
     </>
