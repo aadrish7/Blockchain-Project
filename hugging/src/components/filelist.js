@@ -324,16 +324,17 @@ function FileList() {
 
         <input type="text" value={inputValue} onChange={handleInputChange} placeholder="Enter your username" />
         <input type="text" value={inputValue1} onChange={handleInputChange1} placeholder="Enter dataset ID" />
-        <button type="submit">Check Permissions & Download File</button>
+        <button class="CheckPermissions" type="submit">Check Permissions & Download File</button>
       </form>
         {notification && <p class="notification-message" id="notificationMessage">{notification}</p>}
         {notification1 && <p class="notification-message" id="notificationMessage">{notification1}</p>}
+
         {notification2 && <p class="notification-message" id="notificationMessage">{notification2}</p>}
         
         
         {notification5 && <p class="notification-message" id="notificationMessage">{notification5}</p>}
         {notification6 && <p class="notification-message" id="notificationMessage">{notification6}</p>}
-
+         
         {notification3 && <p class="notification-message" id="notificationMessage">{notification3}</p>}
         {notification7 && <p class="notification-message" id="notificationMessage">{notification7}</p>}
         

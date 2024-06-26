@@ -14,12 +14,12 @@ const LandingPage = () => {
   }, []);
   
   // *** Checking if there is token already in the browser :
-  const authToken = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+  // const authToken = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
 
-  // If authToken exists, redirect to '/userpage'
-  if (authToken) {
-    return <Navigate to="/userpage" />;
-  }
+  // // If authToken exists, redirect to '/userpage'
+  // if (authToken) {
+  //   return <Navigate to="/userpage" />;
+  // }
 
 
   return (
@@ -27,7 +27,7 @@ const LandingPage = () => {
       <h1 className="AnimatedText">Welcome to Our Hugging Face Like Platform</h1>
       <div className="ButtonContainer">
         <Link to="/login"><button className="Button">Login</button></Link>
-        <Link to="/signup"><button className="Button">Signup</button></Link>
+        <Link to="/presignup"><button className="Button">Signup</button></Link>
       </div>
     </div>
   );
