@@ -30,6 +30,8 @@ function FileList() {
   const [notification2, setNotification2] = useState("");
   const [notification3, setNotification3] = useState("");
   const [notification4, setNotification4] = useState("");
+  const [notification5, setNotification5] = useState("");
+  const [notification6, setNotification6] = useState("");
 
   const handleInputChange = (event) => {
     setInputValue(event.target.value);
@@ -121,9 +123,9 @@ function FileList() {
       try {
         const response = await axios.get('http://localhost:3001/files');
         setFiles(response.data.files);
-        setNotification("Files fetched successfully.");
+        setNotification("Datasets fetched successfully.");
       } catch (error) {
-        setError('Error fetching files');
+        setError('Error fetching Datasets');
       }
     }
 
@@ -156,6 +158,15 @@ function FileList() {
     }
   };
 
+  const getToken = async () => {
+    try {
+      const response = await axios.get('http://localhost:3001/token');
+      setNotification5("Token: " + response.data.token);
+    } catch (error) {
+      setError('Error Generating Token');
+    }
+  }
+
   const checkPermissions = async (file) => {
     try {
       const fileName = file.replace(/\.[^/.]+$/, "");
@@ -185,6 +196,7 @@ function FileList() {
     await checkPermissions(file);
 
     try {
+      setNotification6("Contract Decision: Access Granted")
       const response = await axios.get(`http://localhost:3001/download/${file}`, {
         responseType: 'blob',
       });
@@ -237,8 +249,10 @@ function FileList() {
         </form>
         {notification && <p class="notification-message" id="notificationMessage">{notification}</p>}
         {notification1 && <p class="notification-message" id="notificationMessage">{notification1}</p>}
+        {notification5 && <p class="notification-message" id="notificationMessage">{notification5}</p>}
         {notification3 && <p class="notification-message" id="notificationMessage">{notification3}</p>}
         {notification4 && <p class="notification-message" id="notificationMessage">{notification4}</p>}
+        {notification6 && <p class="notification-message" id="notificationMessage">{notification6}</p>}
         {error && <p class="notification-message error-message" id="notificationMessage">{error}</p>}
         <ul class="file-list" id="fileList">
           {/* {files.map((file, index) => (
