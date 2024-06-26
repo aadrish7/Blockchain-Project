@@ -39,6 +39,14 @@ function FileList() {
   const [notification3, setNotification3] = useState("");
   const [notification4, setNotification4] = useState("");
 
+  // These state variables are used to unveil the backend & smart Contract processing
+
+  const [notification5, setNotification5] = useState("Your Token provided is " + localStorage.getItem("authToken"));
+  const [notification6, setNotification6] = useState("");
+  const [notification7, setNotification7] = useState("");
+  // const [notification8, setNotification8] = useState("");  
+
+
 
   const handleInputChange = (event) => {
     setInputValue(event.target.value);
@@ -185,6 +193,7 @@ function FileList() {
       setmyCreds(credentials);
       console.log("My creds are : ", myCreds);
       const { doctorId, hospitalId, specialization, accessRights, location } = credentials.data;
+      setNotification6("You have sucessfully retrieved following details from smart contract : " +  doctorId +  " , " + hospitalId + " , " + specialization + " , " + accessRights + " , " + location);
 
       setNotification2("Invoking Smart Contract with your request");
       // Interaction with the Smart Contract :
@@ -206,7 +215,20 @@ function FileList() {
       const receipt = await tx.wait();
       console.log("your transaction reciept is : ",receipt)
       console.log("Decoding the data : ", receipt.logs);
-      console.log(web3.eth.abi.decodeParameter('string', receipt.logs[0].data));
+
+      setNotification3(`Transaction ${receipt.hash} has been published successfully on Block ${receipt.blockNumber}`);
+      // console.log(web3.eth.abi.decodeParameter('string', receipt.logs[0].data));
+      let txnResult = web3.eth.abi.decodeParameter('string', receipt.logs[0].data);
+      const [decision, publicKey, datasetID] = txnResult.split(':');
+      if (decision == "true")
+      {
+        setNotification7("Smart Contract's Access Policy's Result for you is Permit for " + datasetID);
+      } 
+      else 
+      {
+        setNotification7("Smart Contract's Access Policy's Result for you is Denied for " + datasetID);
+      }
+      
       return true;
     } catch (error) {
       console.error('Error checking permissions:', error);
@@ -239,7 +261,9 @@ function FileList() {
         }
 
         // Getting public key address :
-        setNotification3("Transaction has been published, now waiting for backend based on Smart contract's decision");
+        // setNotification3("Transaction has been published successfully, now waiting for backend based on Smart contract's decision");
+        
+        
         console.log("doc ID : ", docID , inputValue)
         await window.ethereum.request({ method: 'eth_requestAccounts' });
         const provider = new ethers.BrowserProvider(window.ethereum);
@@ -262,7 +286,7 @@ function FileList() {
         document.body.appendChild(link);
         link.click();
         link.parentNode.removeChild(link);
-        setNotification4("Download sucessfully for " + fileName);
+        setNotification4("Service Provider has successfully provided you with " + fileName);
         setResult("");
       } catch (error) {
         setError('Error downloading file');
@@ -307,6 +331,13 @@ function FileList() {
         {notification2 && <p class="notification-message" id="notificationMessage">{notification2}</p>}
         {notification3 && <p class="notification-message" id="notificationMessage">{notification3}</p>}
         {notification4 && <p class="notification-message" id="notificationMessage">{notification4}</p>}
+        
+        {notification5 && <p class="notification-message" id="notificationMessage">{notification5}</p>}
+        {notification6 && <p class="notification-message" id="notificationMessage">{notification6}</p>}
+        {notification7 && <p class="notification-message" id="notificationMessage">{notification7}</p>}
+        
+        
+        
         {error && <p class="notification-message" id="notificationMessage">{error}</p>}
         <ul class="file-list" id="fileList">
           {files.map((file, index) => (
