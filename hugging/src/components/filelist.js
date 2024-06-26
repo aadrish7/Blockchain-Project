@@ -193,7 +193,7 @@ function FileList() {
       setmyCreds(credentials);
       console.log("My creds are : ", myCreds);
       const { doctorId, hospitalId, specialization, accessRights, location } = credentials.data;
-      setNotification6("You have sucessfully retrieved following details from smart contract : " +  doctorId +  " , " + hospitalId + " , " + specialization + " , " + accessRights + " , " + location);
+      setNotification6("You have sucessfully retrieved following details from Service Provider : " +  doctorId +  " , " + hospitalId + " , " + specialization + " , " + accessRights + " , " + location);
 
       setNotification2("Invoking Smart Contract with your request");
       // Interaction with the Smart Contract :
