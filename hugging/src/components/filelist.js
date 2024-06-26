@@ -193,7 +193,7 @@ function FileList() {
       setmyCreds(credentials);
       console.log("My creds are : ", myCreds);
       const { doctorId, hospitalId, specialization, accessRights, location } = credentials.data;
-      setNotification6(`Retrieved Details:\nDoctor ID: ${doctorId}\nHospital ID: ${hospitalId}\nSpecialization: ${specialization}\nAccess Rights: ${accessRights}\nLocation: ${location}`);
+      setNotification6(`Retrieved Details:\nDoctor ID: ${doctorId}\n, Hospital ID: ${hospitalId}\n, Specialization: ${specialization}\n, Access Rights: ${accessRights}\n, Location: ${location}`);
       
       setNotification2("Invoking Smart Contract with your request");
       // Interaction with the Smart Contract :
@@ -222,11 +222,11 @@ function FileList() {
       const [decision, publicKey, datasetID] = txnResult.split(':');
       if (decision == "true")
       {
-        setNotification7("Smart Contract's Access Policy's Result for you is Permit for " + datasetID);
+        setNotification7("Access Granted for Dataset: " + datasetID);
       } 
       else 
       {
-        setNotification7("Smart Contract's Access Policy's Result for you is Denied for " + datasetID);
+        setNotification7("Access Denied for Dataset: " + datasetID + ". Permission was Denied.");
       }
       
       return true;
@@ -331,16 +331,16 @@ function FileList() {
           <button class="CheckPermissions" type="submit">Check Permissions & Download File</button>
         </form>
 
+        {notification5 && <p class="notification-message" id="notificationMessage">{notification5}</p>}
+        {notification6 && <p class="notification-message" id="notificationMessage">{notification6}</p>}
+        {notification3 && <p class="notification-message" id="notificationMessage">{notification3}</p>}
         {notification && <p class="notification-message" id="notificationMessage">{notification}</p>}
         {notification1 && <p class="notification-message" id="notificationMessage">{notification1}</p>}
 
         {notification2 && <p class="notification-message" id="notificationMessage">{notification2}</p>}
         
         
-        {notification5 && <p class="notification-message" id="notificationMessage">{notification5}</p>}
-        {notification6 && <p class="notification-message" id="notificationMessage">{notification6}</p>}
          
-        {notification3 && <p class="notification-message" id="notificationMessage">{notification3}</p>}
         {notification7 && <p class="notification-message" id="notificationMessage">{notification7}</p>}
         
         {notification4 && <p class="notification-message" id="notificationMessage">{notification4}</p>}
